@@ -20,11 +20,11 @@ module VX_hpdcache_core_if_adapter
     parameter type hpdcache_req_t = logic,
     parameter type hpdcache_rsp_t = logic,
     // Size of cache in bytes
-    parameter CACHE_SIZE            = 32768,
+    parameter CACHE_SIZE            = 8192,
     // Size of line inside a bank in bytes
     parameter LINE_SIZE             = 64,
     // Number of banks
-    parameter NUM_BANKS             = 4,
+    parameter NUM_BANKS             = 1,
     // Number of associative ways
     parameter NUM_WAYS              = 4,
     // Size of a word in bytes
@@ -84,7 +84,7 @@ module VX_hpdcache_core_if_adapter
 
 );
     logic [`CS_WORD_ADDR_NO_TAG_WIDTH-1:0] word_addr_no_tag;
-    logic [`CS_WORD_ADDR_NO_TAG_WIDTH-1+`CLOG2(WORD_SIZE):0] byte_addr_no_tag;
+    logic [`CS_WORD_ADDR_NO_TAG_WIDTH-1+`CLOG2(WORD_SIZE):0] byte_addr_no_tag; // 12 bits , so ADDR_NO_TAG_WIDTH is 8 bits, although it should be 4.
     logic [`CS_TAG_SEL_BITS-1:0] addr_tag;
 
     wire flush_op;
