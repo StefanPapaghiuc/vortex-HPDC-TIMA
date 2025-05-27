@@ -252,7 +252,7 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
         // Core parameters
         nRequesters: NUM_REQS,  // should be set as NUMBER of INPUT of Vortex_cache_cluster, set to 1 for test
         paWidth: int'(`MEM_ADDR_WIDTH),  // From Vortex MEM_ADDR_WIDTH, 
-        wordWidth: int'(`CS_WORD_WIDTH),  // From Vortex CS_WORD_WIDTH (8 * WORD_SIZE)
+        wordWidth: `XLEN,  // From Vortex CS_WORD_WIDTH (8 * WORD_SIZE)
         sets: int'(`CS_LINES_PER_BANK),  // CACHE_SIZE / (LINE_SIZE * NUM_WAYS) for NUMBANK = 1
         ways: int'(NUM_WAYS),  // From Vortex NUM_WAYS
         clWords: int'(`CS_WORDS_PER_LINE),  // From Vortex CS_WORDS_PER_LINE (LINE_SIZE/WORD_SIZE)
@@ -311,8 +311,9 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
 
         // Write policies
         wtEn: bit'(WRITE_ENABLE),  // From Vortex WRITE_ENABLE
-        wbEn: bit'(WRITEBACK)    // From Vortex WRITEBACK
+        wbEn: bit'(WRITEBACK),    // From Vortex WRITEBACK
 
+        lowLatency: bit'(1)
     };
 
 
