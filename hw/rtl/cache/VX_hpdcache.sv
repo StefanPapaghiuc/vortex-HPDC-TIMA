@@ -311,9 +311,9 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
 
         // Write policies
         wtEn: bit'(WRITE_ENABLE),  // From Vortex WRITE_ENABLE
-        wbEn: bit'(WRITEBACK),    // From Vortex WRITEBACK
+        wbEn: bit'(WRITEBACK)    // From Vortex WRITEBACK
 
-        lowLatency: bit'(1)
+        // lowLatency: bit'(1)
     };
 
 
