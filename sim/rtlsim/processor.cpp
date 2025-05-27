@@ -47,6 +47,10 @@
 #define TRACE_STOP_TIME -1ull
 #endif
 
+#ifndef THRESHOLD
+#define THRESHOLD -1ull
+#endif
+
 #ifndef VERILATOR_RESET_VALUE
 #define VERILATOR_RESET_VALUE 2
 #endif
@@ -160,9 +164,11 @@ public:
     }
 
     // wait on device to go idle
-    while (device_->busy) {
+    uint64_t cycles = 0;
+    while (device_->busy && (cycles++ < THRESHOLD)) {
       this->tick();
     }
+
 
     // stop
     device_->reset = 1;
