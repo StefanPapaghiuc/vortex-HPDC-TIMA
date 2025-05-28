@@ -255,7 +255,7 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
         wordWidth: `XLEN,  // From Vortex CS_WORD_WIDTH (8 * WORD_SIZE)
         sets: int'(`CS_LINES_PER_BANK),  // CACHE_SIZE / (LINE_SIZE * NUM_WAYS) for NUMBANK = 1
         ways: int'(NUM_WAYS),  // From Vortex NUM_WAYS
-        clWords: int'(`CS_WORDS_PER_LINE),  // From Vortex CS_WORDS_PER_LINE (LINE_SIZE/WORD_SIZE)
+        clWords: int'((LINE_SIZE/`XLEN) * 8),  // From Vortex CS_WORDS_PER_LINE (LINE_SIZE/WORD_SIZE)
         reqWords: int'(1),  // Single word requests
 
         // Request tracking
