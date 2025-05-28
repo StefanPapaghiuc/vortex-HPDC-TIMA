@@ -288,6 +288,7 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
         mshrUseRegbank: bit'(MSHR_SIZE < 16),
 
         // Core response handling
+        cbufEntries: int'(MREQ_SIZE),
         refillCoreRspFeedthrough: bit'(1'b1),
         refillFifoDepth: int'(2),
 
@@ -311,9 +312,9 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
 
         // Write policies
         wtEn: bit'(WRITE_ENABLE),  // From Vortex WRITE_ENABLE
-        wbEn: bit'(WRITEBACK)    // From Vortex WRITEBACK
+        wbEn: bit'(WRITEBACK),    // From Vortex WRITEBACK
 
-        // lowLatency: bit'(1)
+        lowLatency: bit'(1)
     };
 
 
