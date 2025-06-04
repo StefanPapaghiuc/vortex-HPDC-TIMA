@@ -612,7 +612,7 @@
 
 // Cache Size
 `ifndef DCACHE_SIZE
-`define DCACHE_SIZE 16384
+`define DCACHE_SIZE 8192
 `endif
 
 // Number of Banks
@@ -623,7 +623,7 @@
 
 // Core Response Queue Size
 `ifndef DCACHE_CRSQ_SIZE
-`define DCACHE_CRSQ_SIZE 2
+`define DCACHE_CRSQ_SIZE 4
 `endif
 
 // Miss Handling Register Size
