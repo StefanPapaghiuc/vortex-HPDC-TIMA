@@ -256,7 +256,7 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
         sets: int'(`CS_LINES_PER_BANK),  // CACHE_SIZE / (LINE_SIZE * NUM_WAYS) for NUMBANK = 1
         ways: int'(NUM_WAYS),  // From Vortex NUM_WAYS
         clWords: int'((LINE_SIZE/`XLEN) * 8),  // From Vortex CS_WORDS_PER_LINE (LINE_SIZE/WORD_SIZE)
-        reqWords: int'(1),  // Single word requests
+        reqWords: int'(`NUM_LSU_LANES),  // Single word requests
 
         // Request tracking
         reqTransIdWidth: int'(TAG_WIDTH),  // core request tag width
