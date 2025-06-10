@@ -612,7 +612,7 @@
 
 // Cache Size
 `ifndef DCACHE_SIZE
-`define DCACHE_SIZE 8192
+`define DCACHE_SIZE 16384
 `endif
 
 // Number of Banks
