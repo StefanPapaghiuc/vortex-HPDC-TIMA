@@ -122,7 +122,7 @@ module VX_hpdcache_core_if_adapter
     assign hpdcache_req.wdata = vx_core_bus.req_data.data;
     assign hpdcache_req.op = flush_op ? (WRITEBACK ? hpdcache_pkg::HPDCACHE_REQ_CMO_FLUSH_ALL : hpdcache_pkg::HPDCACHE_REQ_CMO_INVAL_ALL) : (vx_core_bus.req_data.rw ? hpdcache_pkg::HPDCACHE_REQ_STORE : hpdcache_pkg::HPDCACHE_REQ_LOAD);
     assign hpdcache_req.be = vx_core_bus.req_data.byteen;
-    assign hpdcache_req.size = `CLOG2(`XLEN/8)[2:0]; // always full word access, and dividing by 8 to switch from bits to bytes !
+    assign hpdcache_req.size = `CLOG2(WORD_SIZE)[2:0]; // always full word access, and dividing by 8 to switch from bits to bytes !
     assign hpdcache_req.sid = hpdcache_req_sid_i;
     assign hpdcache_req.tid = vx_core_bus.req_data.tag;
     // memory request that need response: load(read), fence operation that is EOP (end of program) which is treated as read request
