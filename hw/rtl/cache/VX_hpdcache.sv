@@ -256,7 +256,7 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
         sets: int'(`CS_LINES_PER_BANK),  // CACHE_SIZE / (LINE_SIZE * NUM_WAYS) for NUMBANK = 1
         ways: int'(NUM_WAYS),  // From Vortex NUM_WAYS
         clWords: int'((LINE_SIZE/`XLEN) * 8),  // From Vortex CS_WORDS_PER_LINE (LINE_SIZE/WORD_SIZE)
-        reqWords: int'(`NUM_LSU_LANES),  // Single word requests
+        reqWords: int'(`NUM_LSU_LANES), // as much as the threads
 
         // Request tracking
         reqTransIdWidth: int'(TAG_WIDTH),  // core request tag width
@@ -268,11 +268,10 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
 
         // Data RAM configuration
         //dataWaysPerRamWord: int'(__minu(NUM_WAYS, 128/`CS_WORD_WIDTH)),
-        dataWaysPerRamWord: int'(2),
-        dataSetsPerRam: int'(`CS_LINES_PER_BANK),
+        dataWaysPerRamWord: `MIN(NUM_WAYS, 128/(`XLEN)),
+        dataSetsPerRam: int'(`CS_LINES_PER_BANK), // CACHE_SIZE / (LINE_SIZE * NUM_WAYS) for NUMBANK = 1
         dataRamByteEnable: bit'(1'b1),
-        accessWords: int'(__maxu(`CS_WORDS_PER_LINE / 2, 1)),
-        //accessWords: int'(4)
+        accessWords: int'(`MAX(((LINE_SIZE/`XLEN) * 8) / 2, 1)),
 
         // MSHR configuration
         // mshrSets: int'((MSHR_SIZE < 16) ? 1 : MSHR_SIZE / 2),
@@ -280,10 +279,10 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
         // mshrWaysPerRamWord: int'((MSHR_SIZE < 16) ? MSHR_SIZE : 2),
         // mshrSetsPerRam: int'((MSHR_SIZE < 16) ? 1 : MSHR_SIZE / 2),
        
-        mshrSets: int'(1),
-        mshrWays: int'(MSHR_SIZE),
-        mshrWaysPerRamWord: int'(MSHR_SIZE),
-        mshrSetsPerRam: int'(1),
+        mshrSets: int'((MSHR_SIZE < 16) ? 1 : MSHR_SIZE / 2),
+        mshrWays: int'((MSHR_SIZE < 16) ? MSHR_SIZE : 2),
+        mshrWaysPerRamWord: int'((MSHR_SIZE < 16) ? MSHR_SIZE : 2),
+        mshrSetsPerRam: int'((MSHR_SIZE < 16) ? 1 : MSHR_SIZE / 2),
         mshrRamByteEnable: bit'(1'b1),
         mshrUseRegbank: bit'(MSHR_SIZE < 16),
 
@@ -295,7 +294,7 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
         // Write buffer configuration
         wbufDirEntries: int'(MREQ_SIZE),  // From Vortex MREQ_SIZE
         wbufDataEntries: int'(MREQ_SIZE), 
-        wbufWords: int'(1),
+        wbufWords: int'(4),
         wbufTimecntWidth: int'(3),
 
         // Request tracking
