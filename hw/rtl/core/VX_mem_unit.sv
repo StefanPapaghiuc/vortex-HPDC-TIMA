@@ -127,6 +127,9 @@ module VX_mem_unit import VX_gpu_pkg::*; #(
         .TAG_WIDTH (DCACHE_TAG_WIDTH)
     ) dcache_coalesced_if[`NUM_LSU_BLOCKS]();
 
+    reg [`NUM_LSU_BLOCKS-1:0][`PERF_CTR_BITS-1:0] coalescer_misses; // Stack the number of coalescing "misses" (unexploited empty wires)
+    reg [`NUM_LSU_BLOCKS-1:0][`PERF_CTR_BITS-1:0] coalescer_used_bytes; // Stack the number of used bytes (not empty)
+
     if ((`NUM_LSU_LANES > 1) && (LSU_WORD_SIZE != DCACHE_WORD_SIZE)) begin : g_enabled
 
         for (genvar i = 0; i < `NUM_LSU_BLOCKS; ++i) begin : g_coalescers
@@ -139,11 +142,14 @@ module VX_mem_unit import VX_gpu_pkg::*; #(
                 .FLAGS_WIDTH    (`MEM_REQ_FLAGS_WIDTH),
                 .TAG_WIDTH      (LSU_TAG_WIDTH),
                 .UUID_WIDTH     (`UUID_WIDTH),
-                .QUEUE_SIZE     (`LSUQ_OUT_SIZE)
+                .QUEUE_SIZE     (`LSUQ_OUT_SIZE),
+                .PERF_CTR_BITS  (`PERF_CTR_BITS)
             ) mem_coalescer (
                 .clk            (clk),
                 .reset          (reset),
 
+		.misses		(coalescer_misses[i]),
+		.cnt_bytes_used (coalescer_used_bytes[i]),
                 // Input request
                 .in_req_valid   (lsu_dcache_if[i].req_valid),
                 .in_req_mask    (lsu_dcache_if[i].req_data.mask),
