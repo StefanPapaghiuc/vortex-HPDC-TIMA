@@ -24,6 +24,7 @@ module VX_mem_coalescer #(
     parameter TAG_WIDTH     = 8,
     parameter UUID_WIDTH    = 0, // upper section of the request tag contains the UUID
     parameter QUEUE_SIZE    = 8,
+    parameter PERF_CTR_BITS = `CLOG2(NUM_REQS+1),
 
     parameter DATA_IN_WIDTH = DATA_IN_SIZE * 8,
     parameter DATA_OUT_WIDTH= DATA_OUT_SIZE * 8,
@@ -36,6 +37,9 @@ module VX_mem_coalescer #(
 ) (
     input wire clk,
     input wire reset,
+
+    output wire [PERF_CTR_BITS-1:0]     misses,
+    output wire [PERF_CTR_BITS-1:0]     cnt_bytes_used,
 
     // Input request
     input wire                          in_req_valid,
@@ -322,6 +326,35 @@ module VX_mem_coalescer #(
     assign in_rsp_data   = in_rsp_data_n;
     assign in_rsp_tag    = {out_rsp_tag[OUT_TAG_WIDTH-1 -: UUID_WIDTH], ibuf_dout_tag};
     assign out_rsp_ready = in_rsp_ready;
+
+    // compute coalescing single thread
+    // misses means that there is nothing to coalesce ot failed to do it (sub_optimal)
+
+    reg [PERF_CTR_BITS-1:0] misses_r;
+
+    wire miss_a = ~(| out_req_byteen_r[0][0]) && ~(| out_req_byteen_r[0][1]) && ~((| out_req_byteen_r[0][2]) & (| out_req_byteen_r[0][3]));
+    wire miss_b = ~(| out_req_byteen_r[0][2]) & ~(| out_req_byteen_r[0][3]) & ~((| out_req_byteen_r[0][0]) & (| out_req_byteen_r[0][1]));
+    wire single_threads = (out_req_rw_r && out_req_fire && ((miss_a | miss_b) == 1'b1));
+    
+    reg [PERF_CTR_BITS-1:0] cnt_bytes_used_r;
+    wire [DATA_RATIO-1:0] thread_a = out_req_byteen_r[0][0][0] + out_req_byteen_r[0][0][1] + out_req_byteen_r[0][0][2] + out_req_byteen_r[0][0][3];
+    wire [DATA_RATIO-1:0] thread_b = out_req_byteen_r[0][1][0] + out_req_byteen_r[0][1][1] + out_req_byteen_r[0][1][2] + out_req_byteen_r[0][1][3];
+    wire [DATA_RATIO-1:0] thread_c = out_req_byteen_r[0][2][0] + out_req_byteen_r[0][2][1] + out_req_byteen_r[0][2][2] + out_req_byteen_r[0][2][3];
+    wire [DATA_RATIO-1:0] thread_d = out_req_byteen_r[0][3][0] + out_req_byteen_r[0][3][1] + out_req_byteen_r[0][3][2] + out_req_byteen_r[0][3][3];
+    wire [DATA_OUT_SIZE-1:0] nbr_bytes_used = (thread_a + thread_b + thread_c + thread_d) & {DATA_OUT_SIZE{out_req_fire}} & {DATA_OUT_SIZE{out_req_rw_r}};
+
+    always @(posedge clk) begin
+        if (reset) begin
+            misses_r <= '0;
+            cnt_bytes_used_r <= '0;
+        end else begin
+            misses_r <= misses_r + PERF_CTR_BITS'(single_threads);
+            cnt_bytes_used_r <= cnt_bytes_used_r + PERF_CTR_BITS'(nbr_bytes_used);
+        end
+    end
+
+    assign misses = misses_r;
+    assign cnt_bytes_used = cnt_bytes_used_r;
 
 `ifdef DBG_TRACE_MEM
     wire [`UP(UUID_WIDTH)-1:0] out_req_uuid;
