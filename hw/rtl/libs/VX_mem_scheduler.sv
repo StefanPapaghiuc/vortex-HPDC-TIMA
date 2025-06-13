@@ -221,6 +221,9 @@ module VX_mem_scheduler #(
 
     // Handle memory coalescing ///////////////////////////////////////////////
 
+    reg [`PERF_CTR_BITS-1:0] coalescer_misses; // Stack the number of coalescing "misses" (unexploited empty wires)
+    reg [`PERF_CTR_BITS-1:0] coalescer_used_bytes; // Stack the number of used bytes (not empty)
+    
     if (COALESCE_ENABLE) begin : g_coalescer
 
         VX_mem_coalescer #(
@@ -232,11 +235,14 @@ module VX_mem_scheduler #(
             .FLAGS_WIDTH    (FLAGS_WIDTH),
             .TAG_WIDTH      (REQQ_TAG_WIDTH),
             .UUID_WIDTH     (UUID_WIDTH),
-            .QUEUE_SIZE     (MEM_QUEUE_SIZE)
+            .QUEUE_SIZE     (MEM_QUEUE_SIZE),
+            .PERF_CTR_BITS  (`PERF_CTR_BITS)
         ) coalescer (
             .clk            (clk),
             .reset          (reset),
 
+	    .misses	    (coalescer_misses),
+	    .cnt_bytes_used (coalescer_used_bytes),
             // Input request
             .in_req_valid   (reqq_valid),
             .in_req_mask    (reqq_mask),
