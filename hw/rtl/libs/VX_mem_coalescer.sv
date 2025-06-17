@@ -332,9 +332,11 @@ module VX_mem_coalescer #(
 
     reg [PERF_CTR_BITS-1:0] misses_r;
 
-    wire miss_a = ~(| out_req_byteen_r[0][0]) && ~(| out_req_byteen_r[0][1]) && ~((| out_req_byteen_r[0][2]) & (| out_req_byteen_r[0][3]));
-    wire miss_b = ~(| out_req_byteen_r[0][2]) & ~(| out_req_byteen_r[0][3]) & ~((| out_req_byteen_r[0][0]) & (| out_req_byteen_r[0][1]));
-    wire single_threads = (out_req_rw_r && out_req_fire && ((miss_a | miss_b) == 1'b1));
+    wire miss_a = ~(| out_req_byteen_r[0][0]) & ~(| out_req_byteen_r[0][1]) & (~(| out_req_byteen_r[0][2]) | ~(| out_req_byteen_r[0][3]));
+    wire miss_b = ~(| out_req_byteen_r[0][2]) & ~(| out_req_byteen_r[0][3]) & (~(| out_req_byteen_r[0][0]) | ~(| out_req_byteen_r[0][1]));
+    wire req_single_a = ~(| in_req_byteen[0]) & ~(| in_req_byteen[1]) & (~(| in_req_byteen[2]) | ~(| in_req_byteen[3]));
+    wire req_single_b = ~(| in_req_byteen[2]) & ~(| in_req_byteen[3]) & (~(| in_req_byteen[0]) | ~(| in_req_byteen[1]));
+    wire issue_single_threads = (out_req_rw_r && out_req_fire && ((miss_a | miss_b) == 1'b1) && ((req_single_a & req_single_b) == 1'b0));
     
     reg [PERF_CTR_BITS-1:0] cnt_bytes_used_r;
     wire [DATA_RATIO-1:0] thread_a = out_req_byteen_r[0][0][0] + out_req_byteen_r[0][0][1] + out_req_byteen_r[0][0][2] + out_req_byteen_r[0][0][3];
@@ -348,7 +350,7 @@ module VX_mem_coalescer #(
             misses_r <= '0;
             cnt_bytes_used_r <= '0;
         end else begin
-            misses_r <= misses_r + PERF_CTR_BITS'(single_threads);
+            misses_r <= misses_r + PERF_CTR_BITS'(issue_single_threads);
             cnt_bytes_used_r <= cnt_bytes_used_r + PERF_CTR_BITS'(nbr_bytes_used);
         end
     end
