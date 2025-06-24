@@ -110,14 +110,14 @@ static void __attribute__ ((noinline)) process_thread_groups() {
   uint32_t warps_per_group = targs->warps_per_group;
   uint32_t groups_per_core = targs->groups_per_core;
 
-  uint32_t iterations = targs->warp_batches + (warp_id < targs->remaining_warps);
+  uint32_t iterations = targs->warp_batches + (warp_id < targs->remaining_warps); // 1 + 1 = 2
 
-  uint32_t local_group_id = warp_id / warps_per_group;
-  uint32_t group_warp_id = warp_id - local_group_id * warps_per_group;
-  uint32_t local_task_id = group_warp_id * threads_per_warp + thread_id;
+  uint32_t local_group_id = warp_id / warps_per_group; // 0,1,2,3
+  uint32_t group_warp_id = warp_id - local_group_id * warps_per_group; // 0
+  uint32_t local_task_id = group_warp_id * threads_per_warp + thread_id; // 0,1,2,3
 
-  uint32_t start_group = targs->group_offset + local_group_id;
-  uint32_t end_group = start_group + iterations * groups_per_core;
+  uint32_t start_group = targs->group_offset + local_group_id; // 0,1,2,3
+  uint32_t end_group = start_group + iterations * groups_per_core; // {0;3} + 2*4={8;11}
 
   __local_group_id = local_group_id;
 
@@ -178,7 +178,7 @@ int vx_spawn_threads(uint32_t dimension,
   uint32_t core_id = vx_core_id();
 
   // check group size
-  uint32_t threads_per_core = warps_per_core * threads_per_warp;
+  uint32_t threads_per_core = warps_per_core * threads_per_warp; // 4*4 = 16
   if (threads_per_core < group_size) {
     vx_printf("error: group_size > threads_per_core (%d,%d)\n", group_size, threads_per_core);
     return -1;
@@ -186,8 +186,8 @@ int vx_spawn_threads(uint32_t dimension,
 
   if (group_size > 1) {
     // calculate number of warps per group
-    uint32_t warps_per_group = group_size / threads_per_warp;
-    uint32_t remaining_threads = group_size - warps_per_group * threads_per_warp;
+    uint32_t warps_per_group = group_size / threads_per_warp; // 4/4=1
+    uint32_t remaining_threads = group_size - warps_per_group * threads_per_warp; // 4 - 1*4 = 0
     uint32_t remaining_mask = -1;
     if (remaining_threads != 0) {
       remaining_mask = (1 << remaining_threads) - 1;
@@ -195,29 +195,29 @@ int vx_spawn_threads(uint32_t dimension,
     }
 
     // calculate necessary active cores
-    uint32_t needed_warps = num_groups * warps_per_group;
-    uint32_t needed_cores = (needed_warps + warps_per_core-1) / warps_per_core;
-    uint32_t active_cores = MIN(needed_cores, num_cores);
+    uint32_t needed_warps = num_groups * warps_per_group; // 16*1 = 16
+    uint32_t needed_cores = (needed_warps + warps_per_core-1) / warps_per_core; // (16+4-1)/4=4
+    uint32_t active_cores = MIN(needed_cores, num_cores); // 1
 
     // only active cores participate
     if (core_id >= active_cores)
       return 0;
 
     // total number of groups per core
-    uint32_t total_groups_per_core = num_groups / active_cores;
-    uint32_t remaining_groups_per_core = num_groups - active_cores * total_groups_per_core;
+    uint32_t total_groups_per_core = num_groups / active_cores; // 16
+    uint32_t remaining_groups_per_core = num_groups - active_cores * total_groups_per_core; // 16 - 1*16 = 0
     if (core_id < remaining_groups_per_core)
       ++total_groups_per_core;
 
     // calculate number of warps to activate
-    uint32_t groups_per_core = warps_per_core / warps_per_group;
-    uint32_t total_warps_per_core = total_groups_per_core * warps_per_group;
-    uint32_t active_warps = total_warps_per_core;
+    uint32_t groups_per_core = warps_per_core / warps_per_group; // 4/1 = 4
+    uint32_t total_warps_per_core = total_groups_per_core * warps_per_group; // 16*1 =16
+    uint32_t active_warps = total_warps_per_core; // 16
     uint32_t warp_batches = 1, remaining_warps = 0;
     if (active_warps > warps_per_core) {
-      active_warps = groups_per_core * warps_per_group;
-      warp_batches = total_warps_per_core / active_warps;
-      remaining_warps = total_warps_per_core - warp_batches * active_warps;
+      active_warps = groups_per_core * warps_per_group; // 4*1=4
+      warp_batches = total_warps_per_core / active_warps; // 16/16=1
+      remaining_warps = total_warps_per_core - warp_batches * active_warps; // 16 - 1*4 = 12
     }
 
     // calculate offsets for group distribution
@@ -245,37 +245,37 @@ int vx_spawn_threads(uint32_t dimension,
     // execute callback on warp0
     process_thread_groups_stub();
   } else {
-    uint32_t num_tasks = num_groups;
+    uint32_t num_tasks = num_groups; // 64
     __warps_per_group = 0;
 
     // calculate necessary active cores
-    uint32_t needed_cores = (num_tasks + threads_per_core - 1) / threads_per_core;
-    uint32_t active_cores = MIN(needed_cores, num_cores);
+    uint32_t needed_cores = (num_tasks + threads_per_core - 1) / threads_per_core; // (64-16-1)/4=11
+    uint32_t active_cores = MIN(needed_cores, num_cores); // 1
 
     // only active cores participate
     if (core_id >= active_cores)
       return 0;
 
     // number of tasks per core
-    uint32_t tasks_per_core = num_tasks / active_cores;
-    uint32_t remaining_tasks_per_core = num_tasks - tasks_per_core * active_cores;
+    uint32_t tasks_per_core = num_tasks / active_cores; // 64
+    uint32_t remaining_tasks_per_core = num_tasks - tasks_per_core * active_cores; //  64 - 64*1 = 0
     if (core_id < remaining_tasks_per_core)
       ++tasks_per_core;
 
     // calculate number of warps to activate
-    uint32_t total_warps_per_core = tasks_per_core / threads_per_warp;
-    uint32_t remaining_tasks = tasks_per_core - total_warps_per_core * threads_per_warp;
-    uint32_t active_warps = total_warps_per_core;
+    uint32_t total_warps_per_core = tasks_per_core / threads_per_warp; // 64/4 = 16
+    uint32_t remaining_tasks = tasks_per_core - total_warps_per_core * threads_per_warp; // 64 - 16*4 = 0
+    uint32_t active_warps = total_warps_per_core; // 16
     uint32_t warp_batches = 1, remaining_warps = 0;
     if (active_warps > warps_per_core) {
-      active_warps = warps_per_core;
-      warp_batches = total_warps_per_core / active_warps;
-      remaining_warps = total_warps_per_core - warp_batches * active_warps;
+      active_warps = warps_per_core; // 4
+      warp_batches = total_warps_per_core / active_warps; // 16/16 =1
+      remaining_warps = total_warps_per_core - warp_batches * active_warps; // 16 - 1*4 = 12
     }
 
     // calculate offsets for task distribution
     uint32_t all_tasks_offset = core_id * tasks_per_core + MIN(core_id, remaining_tasks_per_core);
-    uint32_t remain_tasks_offset = all_tasks_offset + (tasks_per_core - remaining_tasks);
+    uint32_t remain_tasks_offset = all_tasks_offset + (tasks_per_core - remaining_tasks); // 64 - 0 = 64
 
     // prepare scheduler arguments
     wspawn_threads_args_t wspawn_args = {
