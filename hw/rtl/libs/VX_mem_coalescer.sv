@@ -343,8 +343,36 @@ module VX_mem_coalescer #(
     wire [DATA_RATIO-1:0] thread_b = out_req_byteen_r[0][1][0] + out_req_byteen_r[0][1][1] + out_req_byteen_r[0][1][2] + out_req_byteen_r[0][1][3];
     wire [DATA_RATIO-1:0] thread_c = out_req_byteen_r[0][2][0] + out_req_byteen_r[0][2][1] + out_req_byteen_r[0][2][2] + out_req_byteen_r[0][2][3];
     wire [DATA_RATIO-1:0] thread_d = out_req_byteen_r[0][3][0] + out_req_byteen_r[0][3][1] + out_req_byteen_r[0][3][2] + out_req_byteen_r[0][3][3];
-    wire [DATA_OUT_SIZE-1:0] nbr_bytes_used = (thread_a + thread_b + thread_c + thread_d) & {DATA_OUT_SIZE{out_req_fire}} & {DATA_OUT_SIZE{out_req_rw_r}};
-
+    wire [DATA_OUT_SIZE-1:0] nbr_bytes_used = (thread_a + thread_b + thread_c + thread_d) & {DATA_OUT_SIZE{out_req_fire}} & {DATA_OUT_SIZE{~out_req_rw_r}};
+    
+    wire [DATA_RATIO-1:0] bytes_in_a = req_byteen_merged[0][0][0] + req_byteen_merged[0][0][1] + req_byteen_merged[0][0][2] + req_byteen_merged[0][0][3];
+    wire [DATA_RATIO-1:0] bytes_in_b = req_byteen_merged[0][1][0] + req_byteen_merged[0][1][1] + req_byteen_merged[0][1][2] + req_byteen_merged[0][1][3];
+    wire [DATA_RATIO-1:0] bytes_in_c = req_byteen_merged[0][2][0] + req_byteen_merged[0][2][1] + req_byteen_merged[0][2][2] + req_byteen_merged[0][2][3];
+    wire [DATA_RATIO-1:0] bytes_in_d = req_byteen_merged[0][3][0] + req_byteen_merged[0][3][1] + req_byteen_merged[0][3][2] + req_byteen_merged[0][3][3];
+    wire [DATA_OUT_SIZE-1:0] nbr_bytes_req = (bytes_in_a + bytes_in_b + bytes_in_c + bytes_in_d) & {DATA_OUT_SIZE{in_req_ready}} & {DATA_OUT_SIZE{in_req_valid}} & {DATA_OUT_SIZE{~in_req_rw}};
+    
+    integer fd;
+    always @(posedge in_req_ready) begin
+    	if (in_req_rw != 1'b1) begin
+    		fd <= $fopen("list_of_bytes_per_req.txt","a");
+    		$fdisplay(fd,nbr_bytes_req);
+    		$fclose(fd);
+    	end else begin
+    		// Do nothing
+    	end
+    end
+    
+    integer fp;
+    always @(posedge out_req_fire) begin
+    	if (out_req_rw != 1'b1) begin
+    		fp <= $fopen("list_of_bytes_used.txt","a");
+    		$fdisplay(fp,nbr_bytes_used);
+    		$fclose(fp);
+    	end else begin
+    		// Do nothing
+    	end
+    end
+    
     always @(posedge clk) begin
         if (reset) begin
             misses_r <= '0;
