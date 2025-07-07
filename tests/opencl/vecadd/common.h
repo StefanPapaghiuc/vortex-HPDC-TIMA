@@ -2,7 +2,7 @@
 #define COMMON_H
 
 #ifndef TYPE
-#define TYPE float
+#define TYPE int
 #endif
 
 #endif // COMMON_H
