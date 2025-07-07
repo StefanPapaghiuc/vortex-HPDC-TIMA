@@ -118,6 +118,7 @@ cl_kernel kernel = NULL;
 cl_mem a_memobj = NULL;
 cl_mem b_memobj = NULL;
 cl_mem c_memobj = NULL;
+size_t * memobj_info = (size_t *)malloc(sizeof(size_t));
 uint8_t *kernel_bin = NULL;
 
 static void cleanup() {
@@ -195,8 +196,9 @@ int main (int argc, char **argv) {
   CL_CHECK(clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&a_memobj));
   CL_CHECK(clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&b_memobj));
   CL_CHECK(clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&c_memobj));
+  printf("a_memobj %p, b_memobj %p, c_memobj %p\n",&a_memobj,&b_memobj,&c_memobj);
 
-    // Allocate memories for input arrays and output arrays.
+  // Allocate memories for input arrays and output arrays.
   std::vector<TYPE> h_a(size);
   std::vector<TYPE> h_b(size);
   std::vector<TYPE> h_c(size);
@@ -206,24 +208,29 @@ int main (int argc, char **argv) {
     h_a[i] = Comparator<TYPE>::generate();
     h_b[i] = Comparator<TYPE>::generate();
   }
+  printf("addr_a = %p addr_b = %p addr_c = %p\n",h_a,h_b,h_c);
 
   // Creating command queue
   commandQueue = CL_CHECK2(clCreateCommandQueue(context, device_id, 0, &_err));
 
-	printf("Upload source buffers\n");
+  printf("Upload source buffers\n");
   CL_CHECK(clEnqueueWriteBuffer(commandQueue, a_memobj, CL_TRUE, 0, nbytes, h_a.data(), 0, NULL, NULL));
   CL_CHECK(clEnqueueWriteBuffer(commandQueue, b_memobj, CL_TRUE, 0, nbytes, h_b.data(), 0, NULL, NULL));
+  CL_CHECK(clGetMemObjectInfo(a_memobj, CL_MEM_SIZE, sizeof(size_t), (void *)memobj_info, NULL));
+  printf("a_memobj size with data is %zu\n",*memobj_info);
+  CL_CHECK(clGetMemObjectInfo(b_memobj, CL_MEM_SIZE, sizeof(size_t), (void *)memobj_info, NULL));
+  printf("b_memobj size with data is %zu\n",*memobj_info);
 
   printf("Execute the kernel\n");
   size_t global_work_size[1] = {size};
   size_t local_work_size[1] = {1};
+  printf("Kernel size is %zu\n",kernel_size);
   auto time_start = std::chrono::high_resolution_clock::now();
   CL_CHECK(clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, global_work_size, local_work_size, 0, NULL, NULL));
   CL_CHECK(clFinish(commandQueue));
   auto time_end = std::chrono::high_resolution_clock::now();
   double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(time_end - time_start).count();
   printf("Elapsed time: %lg ms\n", elapsed);
-
   printf("Download destination buffer\n");
   CL_CHECK(clEnqueueReadBuffer(commandQueue, c_memobj, CL_TRUE, 0, nbytes, h_c.data(), 0, NULL, NULL));
 
