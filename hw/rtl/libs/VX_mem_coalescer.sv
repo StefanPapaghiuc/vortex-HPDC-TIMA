@@ -343,33 +343,39 @@ module VX_mem_coalescer #(
     wire [DATA_RATIO-1:0] thread_b = out_req_byteen_r[0][1][0] + out_req_byteen_r[0][1][1] + out_req_byteen_r[0][1][2] + out_req_byteen_r[0][1][3];
     wire [DATA_RATIO-1:0] thread_c = out_req_byteen_r[0][2][0] + out_req_byteen_r[0][2][1] + out_req_byteen_r[0][2][2] + out_req_byteen_r[0][2][3];
     wire [DATA_RATIO-1:0] thread_d = out_req_byteen_r[0][3][0] + out_req_byteen_r[0][3][1] + out_req_byteen_r[0][3][2] + out_req_byteen_r[0][3][3];
-    wire [DATA_OUT_SIZE-1:0] nbr_bytes_used = (thread_a + thread_b + thread_c + thread_d) & {DATA_OUT_SIZE{out_req_fire}} & {DATA_OUT_SIZE{~out_req_rw_r}};
+    wire [DATA_OUT_SIZE-1:0] nbr_bytes_used = (thread_a + thread_b + thread_c + thread_d) & {DATA_OUT_SIZE{out_req_fire}};
     
-    wire [DATA_RATIO-1:0] bytes_in_a = req_byteen_merged[0][0][0] + req_byteen_merged[0][0][1] + req_byteen_merged[0][0][2] + req_byteen_merged[0][0][3];
-    wire [DATA_RATIO-1:0] bytes_in_b = req_byteen_merged[0][1][0] + req_byteen_merged[0][1][1] + req_byteen_merged[0][1][2] + req_byteen_merged[0][1][3];
-    wire [DATA_RATIO-1:0] bytes_in_c = req_byteen_merged[0][2][0] + req_byteen_merged[0][2][1] + req_byteen_merged[0][2][2] + req_byteen_merged[0][2][3];
-    wire [DATA_RATIO-1:0] bytes_in_d = req_byteen_merged[0][3][0] + req_byteen_merged[0][3][1] + req_byteen_merged[0][3][2] + req_byteen_merged[0][3][3];
-    wire [DATA_OUT_SIZE-1:0] nbr_bytes_req = (bytes_in_a + bytes_in_b + bytes_in_c + bytes_in_d) & {DATA_OUT_SIZE{in_req_ready}} & {DATA_OUT_SIZE{in_req_valid}} & {DATA_OUT_SIZE{~in_req_rw}};
+    wire [DATA_RATIO-1:0] bytes_in_a = (in_req_byteen[0][0] + in_req_byteen[0][1] + in_req_byteen[0][2] + in_req_byteen[0][3]) & {DATA_RATIO{in_req_mask[0]}};
+    wire [DATA_RATIO-1:0] bytes_in_b = (in_req_byteen[1][0] + in_req_byteen[1][1] + in_req_byteen[1][2] + in_req_byteen[1][3]) & {DATA_RATIO{in_req_mask[1]}};
+    wire [DATA_RATIO-1:0] bytes_in_c = (in_req_byteen[2][0] + in_req_byteen[2][1] + in_req_byteen[2][2] + in_req_byteen[2][3]) & {DATA_RATIO{in_req_mask[2]}};
+    wire [DATA_RATIO-1:0] bytes_in_d = (in_req_byteen[3][0] + in_req_byteen[3][1] + in_req_byteen[3][2] + in_req_byteen[3][3]) & {DATA_RATIO{in_req_mask[3]}};
+    wire [DATA_OUT_SIZE-1:0] nbr_bytes_req = (bytes_in_a + bytes_in_b + bytes_in_c + bytes_in_d) & {DATA_OUT_SIZE{in_req_ready}} & {DATA_OUT_SIZE{in_req_valid}};
     
-    integer fd;
+    integer fda;
+    integer fdb;
     always @(posedge in_req_ready) begin
-    	if (in_req_rw != 1'b1) begin
-    		fd <= $fopen("list_of_bytes_per_req.txt","a");
-    		$fdisplay(fd,nbr_bytes_req);
-    		$fclose(fd);
+    	if (in_req_rw != 1'b0) begin
+    		fda <= $fopen("list_of_bytes_per_req_write.txt","a+");
+    		$fdisplay(fda,nbr_bytes_req);
+    		$fclose(fdb);
     	end else begin
-    		// Do nothing
+    		fdb <= $fopen("list_of_bytes_per_req_read.txt","a+");
+    		$fdisplay(fdb,nbr_bytes_req);
+    		$fclose(fdb);
     	end
     end
     
-    integer fp;
+    integer fpa;
+    integer fpb;
     always @(posedge out_req_fire) begin
-    	if (out_req_rw != 1'b1) begin
-    		fp <= $fopen("list_of_bytes_used.txt","a");
-    		$fdisplay(fp,nbr_bytes_used);
-    		$fclose(fp);
+    	if (out_req_rw != 1'b0) begin
+    		fpa <= $fopen("list_of_bytes_used_write.txt","a+");
+    		$fdisplay(fpa,nbr_bytes_used);
+    		$fclose(fpa);
     	end else begin
-    		// Do nothing
+    		fpb <= $fopen("list_of_bytes_used_read.txt","a+");
+    		$fdisplay(fpb,nbr_bytes_used);
+    		$fclose(fpb);
     	end
     end
     
