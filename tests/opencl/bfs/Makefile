@@ -12,6 +12,6 @@ kernel.cl: $(SRC_DIR)/kernel.cl
 
 KERNEL_SRCS := kernel.cl
 
-OPTS ?= $(SRC_DIR)/graph4k.txt
+OPTS ?= $(SRC_DIR)/graph32.txt
 
 include ../common.mk
