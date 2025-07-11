@@ -23,7 +23,7 @@
 #include "oclUtils.h"
 #include "shrQATest.h"
 
-#define BLOCK_DIM 4
+#define BLOCK_DIM 2
 
 // max GPU's to manage for multi-GPU parallel compute
 const unsigned int MAX_GPU_COUNT = 1;
