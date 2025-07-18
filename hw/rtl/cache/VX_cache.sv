@@ -575,6 +575,9 @@ module VX_cache import VX_gpu_pkg::*; #(
     `POP_COUNT(perf_crsp_stall_per_cycle, perf_crsp_stall_per_req);
 
     wire perf_mem_stall_per_cycle = mem_bus_if.req_valid && ~mem_bus_if.req_ready;
+    reg [`PERF_CTR_BITS-1:0] miss_in_flight_read = {`PERF_CTR_BITS{1'b0}};
+    reg [`PERF_CTR_BITS-1:0] miss_in_flight_write = {`PERF_CTR_BITS{1'b0}};
+    reg [`PERF_CTR_BITS-1:0] miss_in_flight_count = {`PERF_CTR_BITS{1'b0}};
 
     reg [`PERF_CTR_BITS-1:0] perf_core_reads;
     reg [`PERF_CTR_BITS-1:0] perf_core_writes;
@@ -583,6 +586,10 @@ module VX_cache import VX_gpu_pkg::*; #(
     reg [`PERF_CTR_BITS-1:0] perf_mshr_stalls;
     reg [`PERF_CTR_BITS-1:0] perf_mem_stalls;
     reg [`PERF_CTR_BITS-1:0] perf_crsp_stalls;
+    
+    integer fpa;
+    // integer fpb;
+    // integer fpc;
 
     always @(posedge clk) begin
         if (reset) begin
@@ -601,6 +608,28 @@ module VX_cache import VX_gpu_pkg::*; #(
             perf_mshr_stalls  <= perf_mshr_stalls  + `PERF_CTR_BITS'(perf_mshr_stall_per_cycle);
             perf_mem_stalls   <= perf_mem_stalls   + `PERF_CTR_BITS'(perf_mem_stall_per_cycle);
             perf_crsp_stalls  <= perf_crsp_stalls  + `PERF_CTR_BITS'(perf_crsp_stall_per_cycle);
+            if (miss_in_flight_read != {`PERF_CTR_BITS{1'b0}}) begin
+            	miss_in_flight_read <= miss_in_flight_read + perf_read_miss_per_cycle - perf_core_reads_per_cycle;
+            end else begin
+            	miss_in_flight_read <= miss_in_flight_read + perf_read_miss_per_cycle;
+            end
+            if (miss_in_flight_write != {`PERF_CTR_BITS{1'b0}}) begin
+            	miss_in_flight_write <= miss_in_flight_write + perf_write_miss_per_cycle - perf_core_writes_per_cycle;
+            end else begin
+            	miss_in_flight_write <= miss_in_flight_write + perf_write_miss_per_cycle;
+            end
+            miss_in_flight_count <= miss_in_flight_read + miss_in_flight_write;
+            // fpa <= $fopen("read_misses_VX_cache.txt","a+");
+            // fpb <= $fopen("write_misses_VX_cache.txt","a+");
+            if (miss_in_flight_count != {`PERF_CTR_BITS{1'b0}}) begin
+            	fpc <= $fopen("current_misses_VX_cache.txt","a+");
+            	$fdisplay(fpc,miss_in_flight_count);
+            	$fclose(fpc);
+            end
+            // $fdisplay(fpa,perf_read_misses);
+            // $fdisplay(fpb,perf_write_misses);
+            // $fclose(fpa);
+            // $fclose(fpb);
         end
     end
 
