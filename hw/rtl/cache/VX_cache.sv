@@ -587,9 +587,9 @@ module VX_cache import VX_gpu_pkg::*; #(
     reg [`PERF_CTR_BITS-1:0] perf_mem_stalls;
     reg [`PERF_CTR_BITS-1:0] perf_crsp_stalls;
     
-    integer fpa;
+    // integer fpa;
     // integer fpb;
-    // integer fpc;
+    integer fpc;
 
     always @(posedge clk) begin
         if (reset) begin
