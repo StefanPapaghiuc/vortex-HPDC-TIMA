@@ -723,7 +723,7 @@ localparam int HPDCACHE_NREQUESTERS = 1;   //
     reg [`PERF_CTR_BITS-1:0] perf_crsp_stalls;
 
     reg [`PERF_CTR_BITS-1:0] perf_bank_stalls; // bank contention/collision
-    //integer fpa;
+    // integer fpa;
     // integer fpb;
     integer fpc;
 
