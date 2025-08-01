@@ -13,7 +13,7 @@ Also, as it may happen depending of the successfullness of the clone, the "batte
     cd build/ci
     chmod +x tests_battery_opencl.sh
 ```
-**Warning :**when launched, it executes a wide variety of tests for very demanding inputs (causes millions of cycles), so launch it while keeping in mind that it wil take quite a few hours (if "too long" or if you have only the results you need in the .txt file associated, just **Ctrl+C** for inerrupting the process in the Docker).
+**Warning :** when launched, it executes a wide variety of tests for very demanding inputs (causes millions of cycles), so launch it while keeping in mind that it wil take quite a few hours (if "too long" or if you have only the results you need in the .txt file associated, just **Ctrl+C** for inerrupting the process in the Docker).
 
 ## Misses tracking (and used bytes through coalescing)
 
@@ -32,6 +32,7 @@ You will surely notice also in the comments inside "VX_mem_coalescer.sv", counte
 
 Vortex provides numerous counters in perf mode : cycles, instructions, loads, stalls. They are enbaled with the **--perf=1** when using the blacbox (enabled in battery-tests), in stdout.
 For the analyses to be relevant, the tests have to be run for at least 2 million cycles. That explains why the battery of tests inside /ci was configurated that way. However, if you wish to change it, just modify the **--args** options for a given test command inside.
+
 **Warning :** the .txt file with the performance data, if it already exists, is **removed at the start of each execution**. If you want to keep the previous one, think of copying it to a different file.
 
 ## Future work
